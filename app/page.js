@@ -14,17 +14,23 @@ async function getRecords() {
 
 export default function Home() {
   const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
 
   useEffect(() => {
-    if(records?.length === 0){
+    if (records?.length === 0) {
       console.log("Fetching records");
       getRecords().then(setRecords);
+      setLoading(false);
     }
   }, []);
 
   const createRecord = async () => {
-    if (!title.trim()) return; // Prevent creating empty records
+    if (!title.trim()) {
+      createAlert("Please enter a title");
+      return
+    } // Prevent creating empty records
+    setLoading(true);
     try {
       const response = await fetch(`${BE_URL}/create`, {
         method: "POST",
@@ -41,12 +47,15 @@ export default function Home() {
       const updatedRecords = await getRecords();
       setRecords(updatedRecords);
       setTitle("");
+      setLoading(false);
     } catch (error) {
       console.error("Error creating record:", error);
+      setLoading(false);
     }
   };
 
   const deleteRecord = async (id) => {
+    setLoading(true);
     try {
       const response = await fetch(`${BE_URL}/delete`, {
         method: "POST",
@@ -62,12 +71,15 @@ export default function Home() {
 
       const updatedRecords = await getRecords();
       setRecords(updatedRecords);
+      setLoading(false);
     } catch (error) {
       console.error("Error deleting record:", error);
+      setLoading(false);
     }
   };
 
   const completeRecord = async (id) => {
+    setLoading(true);
     try {
       const response = await fetch(`${BE_URL}/completed`, {
         method: "POST",
@@ -83,17 +95,23 @@ export default function Home() {
 
       const updatedRecords = await getRecords();
       setRecords(updatedRecords);
+      setLoading(false);
     } catch (error) {
       console.error("Error completing record:", error);
+      setLoading(false);
     }
   };
 
+  const createAlert = (msg) =>{
+    alert(msg);
+  }
+
   return (
     <main className="max-w-3xl mx-auto p-6 font-sans">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">Record Manager</h1>
+      <h1 className="text-3xl font-bold text-center text-white mb-8">Record Manager</h1>
       <div className="flex mb-6">
         <input
-          className="flex-grow px-4 py-2 text-lg border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+          className="flex-grow px-4 py-2 text-lg border-2 border-gray-300 rounded-l-md focus:outline-none focus:ring-0  text-black focus:border-blue-500"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => {
@@ -110,6 +128,7 @@ export default function Home() {
           Create
         </button>
       </div>
+      {loading && <p>Loading...</p>}
       <div className="space-y-4">
         {records.map((record) => (
           <div
